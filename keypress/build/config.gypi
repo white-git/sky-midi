@@ -487,7 +487,7 @@
     "python": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3",
     "standalone_static_library": 1,
     "global_prefix": "/opt/homebrew",
-    "local_prefix": "/Users/moisesalbertosuarezvargas/Documents/Projects/sky-midi/server",
+    "local_prefix": "/Users/moisesalbertosuarezvargas/Documents/Projects/sky-midi/keypress",
     "globalconfig": "/opt/homebrew/etc/npmrc",
     "userconfig": "/Users/moisesalbertosuarezvargas/.npmrc",
     "init_module": "/Users/moisesalbertosuarezvargas/.npm-init.js",

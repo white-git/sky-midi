@@ -14,7 +14,7 @@ import KeyBindings from './KeyBindings.vue'
         <KeyBindings />
       </div>
 
-      <div class="fl w-50 ph3">
+      <div class="fl w-75 ph3">
         <MidiLogs />
       </div>
     </div>

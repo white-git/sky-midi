@@ -18,30 +18,38 @@ export class Either<L, R> {
     }
   }
 
-  left<T>(fn: (l: L) => Either<T, R>): Either<T, R> {
+  left<T>(fn: (left: L) => Either<T, R>): Either<T, R> {
     return this.fold(
       left => fn(left),
       right => Either.right(right)
     )
   }
 
-  right<T>(fn: (r: R) => Either<L, T>): Either<L, T> {
+  right<T>(fn: (right: R) => Either<L, T>): Either<L, T> {
     return this.fold(
       left => Either.left(left),
       right => fn(right)
     )
   }
 
+  mapLeft<T>(fn: (left: L) => T): Either<T, R> {
+    return this.left(left => Either.left(fn(left)))
+  }
+
+  mapRight<T>(fn: (right: R) => T): Either<L, T> {
+    return this.right(right => Either.right(fn(right)))
+  }
+
   getLeft(): L {
     return this.fold(
       l => l,
-      () => { throw new Error(`There's no error: ${JSON.stringify(this.value)}`) },
+      () => { throw new Error('Value is correct') },
     )
   }
 
   getRight(): R {
     return this.fold(
-      () => { throw new Error(`Failed to retrived value ${JSON.stringify(this.value)}`) },
+      () => { throw new Error('Value is incorrect') },
       r => r,
     )
   }

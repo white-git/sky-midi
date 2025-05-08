@@ -15,24 +15,32 @@ export class Midi_Ploc extends Ploc<Midi_State> {
     super(initialMidiState)
   }
 
+  private listen(noteEvent: MidiNoteEvent, logs: string) {
+    this.midiApp.getBindingByCode(noteEvent.code).mapRight(binding => {
+      if (!this.state.binding) this.keyPressApp.keyToggle(noteEvent, binding)
+    })
+
+    this.changeState({ ...this.state, logs })
+    this.setMIDIKeyBinding(noteEvent)
+  }
+
   private setPCKeyBinding() {
     if (this.state.binding === MidiBindingKind.pc) {
       window.addEventListener(
         'keypress',
         (e: KeyboardEvent) => {
-          this.midiApp.updateBinding(
+          const result = this.midiApp.updateBinding(
             <MidiBindingKind>this.state.binding,
             this.state.updating,
             MidiUpdate.create(e.key, e.keyCode),
-          ).fold(
-            () => {},
-            bindings => this.changeState({
-              ...this.state,
-              bindings,
-              binding: false,
-              updating: <MidiBinding>{},
-            }),
           )
+
+          this.changeState({
+            ...this.state,
+            bindings: result.getRight(),
+            binding: false,
+            updating: <MidiBinding>{},
+          })
         },
         { once: true },
       )
@@ -41,19 +49,18 @@ export class Midi_Ploc extends Ploc<Midi_State> {
 
   private setMIDIKeyBinding(noteEvent: MidiNoteEvent) {
     if (this.state.binding === MidiBindingKind.midi) {
-      this.midiApp.updateBinding(
+      const result = this.midiApp.updateBinding(
         <MidiBindingKind>this.state.binding,
         this.state.updating,
         MidiUpdate.create(noteEvent.note, noteEvent.code)
-      ).fold(
-        () => {},
-        bindings => this.changeState({
-          ...this.state,
-          bindings,
-          binding: false,
-          updating: <MidiBinding>{},
-        }),
       )
+
+      this.changeState({
+        ...this.state,
+        bindings: result.getRight(),
+        binding: false,
+        updating: <MidiBinding>{},
+      })
     }
   }
 
@@ -82,46 +89,24 @@ export class Midi_Ploc extends Ploc<Midi_State> {
 
   startListening() {
     this.changeState({ ...this.state, listening: true })
-    const result = this.midiApp.startListening((noteEvent: MidiNoteEvent, logs: string) => {
-      this.midiApp.getBindingByCode(noteEvent.code).fold(
-        () => {},
-        binding => {
-          if (!this.state.binding) this.keyPressApp.keyToggle(noteEvent, binding)
-        }
-      )
-
-      this.changeState({ ...this.state, logs })
-      this.setMIDIKeyBinding(noteEvent)
-    })
-
-    result.fold(
-      () => {},
-      logs => this.changeState({ ...this.state, logs }),
-    )
+    const result = this.midiApp.startListening(this.listen.bind(this))
+    this.changeState({ ...this.state, logs: result.getRight() })
   }
 
   stopListening() {
     this.changeState({ ...this.state, listening: false })
     const result = this.midiApp.stopListening()
-
-    result.fold(
-      () => {},
-      logs => this.changeState({ ...this.state, logs }),
-    )
+    this.changeState({ ...this.state, logs: result.getRight() })
   }
 
   addBinding() {
-    this.midiApp.addBinding().fold(
-      () => {},
-      bindings => this.changeState({ ...this.state, bindings })
-    )
+    const result = this.midiApp.addBinding()
+    this.changeState({ ...this.state, bindings: result.getRight() })
   }
 
   removeBinding(binding: MidiBinding) {
-    this.midiApp.removeBinding(binding).fold(
-      () => {},
-      bindings => this.changeState({ ...this.state, bindings })
-    )
+    const result = this.midiApp.removeBinding(binding)
+    this.changeState({ ...this.state, bindings: result.getRight() })
   }
 
   startBinding(binding: MidiBindingKind, updating: MidiBinding) {
